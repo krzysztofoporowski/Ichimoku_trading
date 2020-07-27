@@ -12,7 +12,7 @@ from simtradesim import Budget, Transaction, define_gl
 from wsedatareader import get_date_only, get_data_from_bossa, create_directory
 from misctradingtools import get_prev_workday_datestring, plot_ichimoku
 
-def tenkan_sen_kijun_sen_cross_no_SL(row):
+def tenkan_sen_kijun_sen_cross_no_sl(row):
     '''
     Tenkan Sen Kijun Sen cross - strong version (algo 1_1)
     '''
@@ -50,7 +50,7 @@ def tenkan_sen_kijun_sen_cross_no_SL(row):
             else:
                 print('cena zamkniecia {}'.format(row['open']))
 
-def tenkan_sen_kijun_sen_cross_f_SL(row):
+def tenkan_sen_kijun_sen_cross_f_sl(row):
     '''
     Tenkan Sen Kijun Sen cross - only stron version (algo 1_1)
     Result files
@@ -79,18 +79,18 @@ def tenkan_sen_kijun_sen_cross_f_SL(row):
                                                be_verbose=BE_VERBOSE)
                         if row['senkou_span_a'] > row['senkou_span_b']:
                             TRANS.set_sl(sl_type='fixed',
-                                        sl_factor=row['senkou_span_b'],
-                                        date_sl=get_date_only(row),
-                                        be_verbose=BE_VERBOSE)
+                                         sl_factor=row['senkou_span_b'],
+                                         date_sl=get_date_only(row),
+                                         be_verbose=BE_VERBOSE)
                         else:
                             TRANS.set_sl(sl_type='fixed',
-                                        sl_factor=row['senkou_span_a'],
-                                        date_sl=get_date_only(row),
-                                        be_verbose=BE_VERBOSE)
+                                         sl_factor=row['senkou_span_a'],
+                                         date_sl=get_date_only(row),
+                                         be_verbose=BE_VERBOSE)
                         BUDZET.manage_amount(-TRANS.open_total)
                         return 1
     else:
-        if (row['low'] < TRANS.stop_loss):
+        if row['low'] < TRANS.stop_loss:
             # closing trade when SL is hit
             TRANS.close_transaction(TRANS.stop_loss,
                                     get_date_only(row),
@@ -98,7 +98,7 @@ def tenkan_sen_kijun_sen_cross_f_SL(row):
             BUDZET.manage_amount(TRANS.close_total)
             TRANS.reset_values()
             return -1
-        if (row['tenkan_sen'] < row['kijun_sen']):
+        if row['tenkan_sen'] < row['kijun_sen']:
             # closing trade when close signal appears
             if row['open'] != 0:
                 TRANS.close_transaction(row['close'],
@@ -196,7 +196,7 @@ for STOCK in STOCKS:
         kolumny = ['close', 'kijun_sen', 'tenkan_sen', 'senkou_span_a',
                     'senkou_span_b', 'chikou_span']#, 'sygnal']
         '''
-        data['signal'] = data.apply(tenkan_sen_kijun_sen_cross_f_SL, axis=1)
+        data['signal'] = data.apply(tenkan_sen_kijun_sen_cross_f_sl, axis=1)
         man_close_date = get_prev_workday_datestring()
         if TRANS.in_transaction:
             TRANS.close_transaction(data['open'].loc[man_close_date],

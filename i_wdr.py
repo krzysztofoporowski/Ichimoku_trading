@@ -5,7 +5,7 @@ Created on Wed Jul 10 19:48:17 2019
 @author: krzysztof.oporowski
 """
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 import warnings
 import pandas as pd
 from colorama import init, Fore
@@ -27,36 +27,39 @@ def tenkan_sen_kijun_sen_cross_no_sl(row):
     global BE_VERBOSE
     global BOSSA_DATE
 
+    now_7 = datetime.now().date() - timedelta(days=7)
     if not TRANS.in_transaction:
         if ((row['tenkan_sen'] > row['kijun_sen']) and
                 (row['tenkan_sen'] > row['senkou_span_a']) and
                 (row['tenkan_sen'] > row['senkou_span_b']) and
                 (row['c_mean'] > row['c_mean_26'])):
             TRANS.in_transaction = True
-            if get_date_only(row) == BOSSA_DATE:
-                print(Fore.GREEN,
-                      '+++ %s %s BUY: close: %s' % (STOCK,
-                                                    get_date_only(row),
-                                                    row['close']))
-            else:
-                print(Fore.WHITE,
-                      '+++ %s %s BUY: close: %s' % (STOCK,
-                                                    get_date_only(row),
-                                                    row['close']))
+            if get_date_only(row) > now_7:
+                if get_date_only(row) == BOSSA_DATE:
+                    print(Fore.GREEN,
+                          '+++ %s %s BUY: close: %s' % (STOCK,
+                                                        get_date_only(row),
+                                                        row['close']))
+                else:
+                    print(Fore.WHITE,
+                          '+++ %s %s BUY: close: %s' % (STOCK,
+                                                        get_date_only(row),
+                                                        row['close']))
             return 1
     else:
         if row['tenkan_sen'] < row['kijun_sen']:
             TRANS.reset_values()
-            if get_date_only(row) == BOSSA_DATE:
-                print(Fore.RED,
-                      '--- %s %s SELL: close: %s' % (STOCK,
-                                                     get_date_only(row),
-                                                     row['close']))
-            else:
-                print(Fore.WHITE,
-                      '--- %s %s SELL: close: %s' %(STOCK,
-                                                    get_date_only(row),
-                                                    row['close']))
+            if get_date_only(row) > now_7:
+                if get_date_only(row) == BOSSA_DATE:
+                    print(Fore.RED,
+                          '--- %s %s SELL: close: %s' % (STOCK,
+                                                         get_date_only(row),
+                                                         row['close']))
+                else:
+                    print(Fore.WHITE,
+                          '--- %s %s SELL: close: %s' %(STOCK,
+                                                        get_date_only(row),
+                                                        row['close']))
             return -1
 
 def tenkan_sen_kijun_sen_cross_f_sl(row):
@@ -156,9 +159,8 @@ EXCEPTIONS = ['PEKAO', 'PGE', 'PKOBP', 'CLNPHARMA', 'BOS', 'MEDICALG',
 EXCEPTIONS = ['BAHOLDING']
 DATA_PATH = "C:/Users/krzysztof.oporowski.HWS01/Documents/Python_projects/Data/"
 HISTORY = []
-YEARS = 10
+YEARS = 1
 SAMPLES = 240 * YEARS
-SAMPLES = 30
 ALL_TRADES = pd.DataFrame()
 BE_VERBOSE = False
 SHOW_GRAPH = False
