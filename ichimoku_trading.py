@@ -432,7 +432,7 @@ SAVE_SINGLE_STOCK = True
 SAVE_RESULTS = True
 ALGO = [algo_2_1]
 MULT = 2
-ATR_RATIO = 10
+ATR_RATIO = 4
 warnings.filterwarnings('ignore')
 # Creating directories to store results
 create_directory('Results')
