@@ -6,14 +6,18 @@ Created on Wed Jul 10 19:48:17 2019
 """
 
 from datetime import timedelta, datetime
+import sys
+sys.path.append('/home/krzys/python/SimTradeSim')
+sys.path.append('/home/krzys/python/WSEDataReader')
+sys.path.append('/home/krzys/python/misctradingtools')
 import warnings
 import pandas as pd
 from talib import ATR
-from simtradesim import Budget, Transaction, define_gl
+from SimTradeSim import Budget, Transaction, define_gl
 from wsedatareader import get_date_only, get_data_from_bossa, create_directory
 from wsedatareader import get_bossa_date
 from misctradingtools import get_prev_workday_datestring, plot_ichimoku
-from misctradingtools import get_date_from_past
+from misctradingtools import get_date_from_past, return_data_path
 
 def kumo_brekaut_01_02(row):
     '''
@@ -89,6 +93,8 @@ def kumo_brekaut_01_02(row):
 
 
 #****************************************************************************
+# paths
+
 
 WIG20 = ['ALIOR', 'CCC', 'CDPROJEKT', 'CYFRPLSAT', 'DINOPL', 'JSW', 'KGHM',
          'LPP', 'LOTOS', 'MBANK', 'ORANGEPL', 'PEKAO', 'PGE', 'PGNIG',
@@ -120,7 +126,7 @@ TECH_EXCEPTIONS = ['BAHOLDING'] # 'BAHOLDING' has duplicated index
 FUND_EXCEPTIONS = ['ORANGEPL'] # ORANGPL ROE 0,51% 23.08.2020
 EXCEPTIONS = TECH_EXCEPTIONS + FUND_EXCEPTIONS
 #EXCEPTIONS = []
-DATA_PATH = "C:/Users/krzysztof.oporowski.HWS01/Documents/Python_projects/Data/"
+DATA_PATH = str(return_data_path())
 HISTORY = []
 YEARS = 3
 SAMPLES = 240 * YEARS
