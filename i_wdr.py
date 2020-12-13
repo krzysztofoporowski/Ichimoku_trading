@@ -12,12 +12,13 @@ sys.path.append('/home/krzys/python/WSEDataReader')
 sys.path.append('/home/krzys/python/misctradingtools')
 import warnings
 import pandas as pd
+import numpy as np
 from talib import ATR
 from SimTradeSim import Budget, Transaction, define_gl
 from wsedatareader import get_date_only, get_data_from_bossa, create_directory
 from wsedatareader import get_bossa_date
 from misctradingtools import get_prev_workday_datestring, plot_ichimoku
-from misctradingtools import get_date_from_past, return_data_path
+from misctradingtools import get_date_from_past, return_data_path, return_indexes
 
 def kumo_brekaut_01_02(row):
     '''
@@ -36,7 +37,7 @@ def kumo_brekaut_01_02(row):
     global data
     global BOSSA_DATE
     # global BE_VERBOSE
-    # if (get_date_only(row) > get_date_from_past(past=3) and
+    #if (get_date_only(row) > get_date_from_past(past=10) and
     #    (get_date_only(row) <= BOSSA_DATE)):
     if (get_date_only(row) == BOSSA_DATE) :
         BE_VERBOSE = True
@@ -87,40 +88,30 @@ def kumo_brekaut_01_02(row):
                          be_verbose=False)
             new_sl = TRANS.stop_loss
             if new_sl > curr_sl and BE_VERBOSE:
-                print('^^^ {} UP SL {}, {}'.format(get_date_only(row), STOCK,
-                                                   TRANS.stop_loss))
+                print('''
+                        ^^^ {} UP SL {}, {}, bought {}, curr result {}
+                      '''.format(get_date_only(row),
+                                 STOCK,
+                                 TRANS.stop_loss,
+                                 TRANS.open_date,
+                                 TRANS.current_value - TRANS.open_total))
+            elif new_sl <= curr_sl and BE_VERBOSE:
+                print('''
+                        --- {} DO nothing {}, {}, bought {}, curr result {}
+                      '''.format(get_date_only(row),
+                                 STOCK,
+                                 TRANS.stop_loss,
+                                 TRANS.open_date,
+                                 TRANS.current_value - TRANS.open_total))
             TRANS.register_transaction(verbose=False)
 
 
 #****************************************************************************
 # paths
 
-
-WIG20 = ['ALIOR', 'CCC', 'CDPROJEKT', 'CYFRPLSAT', 'DINOPL', 'JSW', 'KGHM',
-         'LPP', 'LOTOS', 'MBANK', 'ORANGEPL', 'PEKAO', 'PGE', 'PGNIG',
-         'PKNORLEN', 'PKOBP', 'PLAY', 'PZU', 'SANPL', 'TAURONPE']
-ETF = ['ETFSP500', 'ETFDAX', 'ETFW20L']
-MWIG40 = ['11BIT', 'ASSECOPOL', 'AMICA', 'GRUPAAZOTY', 'BUDIMEX', 'BENEFIT',
-          'HANDLOWY', 'BORYSZEW', 'INTERCARS', 'CIECH', 'CIGAMES',
-          'CLNPHARMA', 'COMARCH',
-          'AMREST', 'FORTE',
-          'ECHO', 'ENEA',
-          'ENERGA', 'EUROCASH', 'FAMUR', 'GPW', 'GTC', 'GETIN',
-          'INGBSK', 'KERNEL', 'KRUK', 'KETY', 'LIVECHAT', 'BOGDANKA', 'MABION',
-          'BNPPPL', 'DEVELIA', 'VRG',
-          'MILLENNIUM', 'ORBIS', 'PKPCARGO', 'PLAYWAY', 'STALPROD', 'TSGAMES',
-          'WIRTUALNA', 'MWIG40']
-SWIG80 = ['ATAL', 'ABPL', 'ASSECOBS', 'ACAUTOGAZ', 'AGORA', 'ALTUSTFI',
-          'AMBRA', 'ALUMETAL', 'AUTOPARTN', 'APATOR', 'ARCHICOM', 'ASBIS',
-          'ASSECOSEE', 'ASTARTA', 'ATMGRUPA', 'BAHOLDING', 'BIOTON', 'PBKM',
-          'BOS', 'BSCDRUK', 'COMP', 'COGNOR', 'CPGROUP', 'CORMAY',
-          'DEBICA', 'DOMDEV', 'EKOEXPORT', 'ELBUDOWA', 'ELEMENTAL', 'ENTER',
-          'FERRO', 'IDEABANK', 'IMCOMPANY', 'INSTALKRK', 'KOGENERA',
-          'DATAWALK',
-          'KRUSZWICA', 'LENTEX', 'MCI', 'MEDICALG', 'MANGATA', 'MLPGROUP',
-          'MENNICA', 'MONNARI', 'NETIA', 'NEUCA', 'NEWAG', 'OAT', 'OPONEO.PL',
-          'OVOSTAR', 'WIELTON']
-STOCKS = WIG20 + MWIG40 + SWIG80
+WIG20, MWIG40, SWIG80 = return_indexes()
+#STOCKS = WIG20 + MWIG40 + SWIG80
+STOCKS = np.concatenate((WIG20, MWIG40, SWIG80), axis=None)
 # STOCKS = ['WIELTON']
 TECH_EXCEPTIONS = ['BAHOLDING'] # 'BAHOLDING' has duplicated index
 FUND_EXCEPTIONS = ['ORANGEPL'] # ORANGPL ROE 0,51% 23.08.2020
