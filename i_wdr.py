@@ -5,31 +5,20 @@ Created on Wed Jul 10 19:48:17 2019
 @author: krzysztof.oporowski
 """
 
-<<<<<<< HEAD
 from datetime import timedelta, datetime
 import sys
 sys.path.append('/home/krzys/python/SimTradeSim')
 sys.path.append('/home/krzys/python/WSEDataReader')
 sys.path.append('/home/krzys/python/misctradingtools')
-=======
-from datetime import timedelta
->>>>>>> 0fd5031d03c413925b69131022b0e0aeaa1e556e
 import warnings
 import pandas as pd
 import numpy as np
 from talib import ATR
-<<<<<<< HEAD
 from SimTradeSim import Budget, Transaction, define_gl
 from wsedatareader import get_date_only, get_data_from_bossa, create_directory
 from wsedatareader import get_bossa_date
 from misctradingtools import get_prev_workday_datestring, plot_ichimoku
 from misctradingtools import get_date_from_past, return_data_path, return_indexes
-=======
-from simtradesim import Budget, Transaction
-from wsedatareader import get_date_only, get_data_from_bossa, create_directory
-from wsedatareader import get_bossa_date
-from misctradingtools import get_prev_workday_datestring, get_date_from_past
->>>>>>> 0fd5031d03c413925b69131022b0e0aeaa1e556e
 
 def kumo_brekaut_01_02(row):
     '''
@@ -45,15 +34,10 @@ def kumo_brekaut_01_02(row):
     global STOCK
     global data
     global BOSSA_DATE
-<<<<<<< HEAD
     # global BE_VERBOSE
     #if (get_date_only(row) > get_date_from_past(past=10) and
     #    (get_date_only(row) <= BOSSA_DATE)):
     if (get_date_only(row) == BOSSA_DATE) :
-=======
-
-    if get_date_only(row) == BOSSA_DATE:
->>>>>>> 0fd5031d03c413925b69131022b0e0aeaa1e556e
         BE_VERBOSE = True
     else:
         BE_VERBOSE = False
@@ -102,7 +86,6 @@ def kumo_brekaut_01_02(row):
             new_sl = TRANS.stop_loss
             if new_sl > curr_sl and BE_VERBOSE:
                 print('''
-<<<<<<< HEAD
                         ^^^ {} UP SL {}, {}, bought {}, curr result {}
                       '''.format(get_date_only(row),
                                  STOCK,
@@ -117,50 +100,15 @@ def kumo_brekaut_01_02(row):
                                  TRANS.stop_loss,
                                  TRANS.open_date,
                                  TRANS.current_value - TRANS.open_total))
-=======
-                       ^^^ {} UP SL {}, {:.2f}, bought {}, open {}
-                       '''.format(get_date_only(row), STOCK, TRANS.stop_loss,
-                                  TRANS.open_date, TRANS.open_price))
-                #TRANS.show_trade()
->>>>>>> 0fd5031d03c413925b69131022b0e0aeaa1e556e
             TRANS.register_transaction(verbose=False)
 
 
 #****************************************************************************
 # paths
 
-<<<<<<< HEAD
 WIG20, MWIG40, SWIG80 = return_indexes()
 #STOCKS = WIG20 + MWIG40 + SWIG80
 STOCKS = np.concatenate((WIG20, MWIG40, SWIG80), axis=None)
-=======
-WIG20 = ['ALLEGRO', 'ALIOR', 'CCC', 'CDPROJEKT', 'CYFRPLSAT', 'DINOPL', 'JSW',
-          'KGHM', 'LPP', 'LOTOS', 'ORANGEPL', 'PEKAO', 'PGE', 'PGNIG',
-         'PKNORLEN', 'PKOBP', 'PLAY', 'PZU', 'SANPL', 'TAURONPE']
-ETF = ['ETFSP500', 'ETFDAX', 'ETFW20L']
- 
-MWIG40 = ['11BIT', 'ASSECOPOL', 'AMICA', 'ASSECOSEE', 'GRUPAAZOTY', 'BUDIMEX', 'BENEFIT',
-          'HANDLOWY', 'BML0919', 'BORYSZEW', 'INTERCARS', 'CIECH', 'CIGAMES',
-          'CLNPHARMA', 'COMARCH', 'MBANK',
-          'AMREST', 'FORTE',
-          'ECHO', 'ENEA',
-          'ENERGA', 'EUROCASH', 'FAMUR', 'GPW', 'GTC', 'GETIN',
-          'INGBSK', 'KERNEL', 'KRUK', 'KETY', 'LIVECHAT', 'BOGDANKA', 'MABION',
-          'BNPPPL', 'DEVELIA', 'VRG',
-          'MILLENNIUM', 'ORBIS', 'PKPCARGO', 'PLAYWAY', 'STALPROD', 'TSGAMES',
-          'WIRTUALNA', 'MWIG40']
-SWIG80 = ['ATAL', 'ABPL', 'ASSECOBS', 'ACAUTOGAZ', 'AGORA', 'ALTUSTFI',
-          'AMBRA', 'ALUMETAL', 'AUTOPARTN', 'APATOR', 'ARCHICOM', 'ASBIS',
-           'ASTARTA', 'ATMGRUPA', 'BAHOLDING', 'BIOTON', 'PBKM',
-          'BOS', 'BSCDRUK', 'COMP', 'COGNOR', 'CPGROUP', 'CORMAY',
-          'DEBICA', 'DOMDEV', 'EKOEXPORT', 'ELBUDOWA', 'ELEMENTAL', 'ENTER',
-          'FERRO', 'IDEABANK', 'IMCOMPANY', 'INSTALKRK', 'KOGENERA',
-          'DATAWALK',
-          'KRUSZWICA', 'LENTEX', 'MCI', 'MEDICALG', 'MANGATA', 'MLPGROUP',
-          'MENNICA', 'MONNARI', 'NETIA', 'NEUCA', 'NEWAG', 'OAT', 'OPONEO.PL',
-          'OVOSTAR', 'WIELTON']
-STOCKS = WIG20 + MWIG40 + SWIG80
->>>>>>> 0fd5031d03c413925b69131022b0e0aeaa1e556e
 # STOCKS = ['WIELTON']
 TECH_EXCEPTIONS = ['BAHOLDING'] # 'BAHOLDING' has duplicated index
 FUND_EXCEPTIONS = ['ORANGEPL', # ORANGPL ROE 0,51% 23.08.2020
