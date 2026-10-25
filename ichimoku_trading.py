@@ -6,12 +6,19 @@ Created on Wed Jul 10 19:48:17 2019
 """
 
 from datetime import timedelta, datetime
+import sys
+sys.path.append('/home/krzys/python/SimTradeSim')
+sys.path.append('/home/krzys/python/WSEDataReader')
+sys.path.append('/home/krzys/python/misctradingtools')
 import warnings
 import pandas as pd
+import numpy as np
 from talib import ATR
-from simtradesim import Budget, Transaction, define_gl
+from SimTradeSim import Budget, Transaction, define_gl
 from wsedatareader import get_date_only, get_data_from_bossa, create_directory
+from wsedatareader import get_bossa_date
 from misctradingtools import get_prev_workday_datestring, plot_ichimoku
+from misctradingtools import get_date_from_past, return_data_path, return_indexes
 
 def algo_1_1(row):
     '''
@@ -566,7 +573,68 @@ def kumo_brekaut_01_02(row):
     global BE_VERBOSE
     if not TRANS.in_transaction:
         condition = True
-        if ((row['kumo'] == 1) and (row['c_1'] > row['senkou_span_a']) and
+        #if ((row['c_1'] > row['senkou_span_a']) and
+        if ((row['kumo'] == 1) and (row['c_1'] > row['senkou_span_a']) and 
+                (row['c_1'] > row['c26']) and (row['kumo26'] == 1)):
+            if row['open'] != 0:
+                if BUDZET.equity > 4:
+                    stock_number = TRANS.how_many_stocks(row['open'],
+                                                         BUDZET.equity)
+                    if stock_number > 0:
+                        TRANS.open_transaction(stock_number, row['open'],
+                                               get_date_only(row),
+                                               be_verbose=BE_VERBOSE)
+                        TRANS.curr_value(price=row['close'],
+                                         date=get_date_only(row),
+                                         be_verbose=BE_VERBOSE)
+                        temp_sl = row['senkou_span_b'] - row['atr_sl']
+                        TRANS.set_sl(sl_type='fixed',
+                                     sl_factor=temp_sl,
+                                     date_sl=get_date_only(row),
+                                     be_verbose=BE_VERBOSE)
+                        TRANS.define_risk(verbose=BE_VERBOSE)
+                        BUDZET.manage_amount(-TRANS.open_total)
+                        return 1
+    else:
+        if row['c_1'] < TRANS.stop_loss:
+            if row['open'] != 0:
+                TRANS.close_transaction(row['close'],
+                                        get_date_only(row),
+                                        be_verbose=BE_VERBOSE)
+                BUDZET.manage_amount(TRANS.close_total)
+                TRANS.reset_values()
+                return -1
+            else:
+                print('cena zamkniecia {}'.format(row['open']))
+        else:
+            #BE_VERBOSE = False
+            TRANS.curr_value(row['close'],
+                             date=get_date_only(row),
+                             be_verbose=BE_VERBOSE)
+            temp_sl = row['senkou_span_b'] - row['atr_sl']
+            #temp_sl = row['kijun_sen'] - row['atr_sl']
+            TRANS.set_sl(sl_type='fixed',
+                         sl_factor=temp_sl,
+                         date_sl=get_date_only(row),
+                         be_verbose=BE_VERBOSE)
+            TRANS.register_transaction(verbose=BE_VERBOSE)
+            #BE_VERBOSE = True
+
+def kumo_brekaut_01_03(row):
+    '''
+    Kumo breakout, clear stop loss. 
+    '''
+    global BUDZET
+    global TRANS_ID
+    global TRANS
+    global COUNT
+    global STOCK
+    global data
+    global BE_VERBOSE
+    if not TRANS.in_transaction:
+        condition = True
+        if ((row['c_1'] > row['senkou_span_a']) and
+                (row['c_3'] < row['senkou_span_a']) and
                 (row['c_1'] > row['c26']) and (row['kumo26'] == 1)):
             if row['open'] != 0:
                 if BUDZET.equity > 4:
@@ -609,9 +677,9 @@ def kumo_brekaut_01_02(row):
                          be_verbose=BE_VERBOSE)
             TRANS.register_transaction(verbose=BE_VERBOSE)
 
-def kumo_brekaut_01_03(row):
+def kumo_brekaut_01_04(row):
     '''
-    Kumo breakout, clear stop loss. 
+    Kumo breakout, clear stop loss
     '''
     global BUDZET
     global TRANS_ID
@@ -623,7 +691,6 @@ def kumo_brekaut_01_03(row):
     if not TRANS.in_transaction:
         condition = True
         if ((row['kumo'] == 1) and (row['c_1'] > row['senkou_span_a']) and
-                (row['c_3'] < row['senkou_span_a']) and
                 (row['c_1'] > row['c26']) and (row['kumo26'] == 1)):
             if row['open'] != 0:
                 if BUDZET.equity > 4:
@@ -803,7 +870,7 @@ def videos_strategy(row):
 
 
 #****************************************************************************
-
+'''
 WIG20 = ['ALIOR', 'CCC', 'CDPROJEKT', 'CYFRPLSAT', 'DINOPL', 'JSW', 'KGHM',
          'LPP', 'LOTOS', 'MBANK', 'ORANGEPL', 'PEKAO', 'PGE', 'PGNIG',
          'PKNORLEN', 'PKOBP', 'PLAY', 'PZU', 'SANPL', 'TAURONPE']
@@ -834,27 +901,34 @@ EXCEPTIONS = ['PEKAO', 'PGE', 'PKOBP', 'CLNPHARMA', 'BOS', 'MEDICALG',
               'OAT']
 EXCEPTIONS = ['BAHOLDING'] # 'BAHOLDING' has duplicated index
 #EXCEPTIONS = []
-DATA_PATH = "C:/Users/krzysztof.oporowski.HWS01/Documents/Python_projects/Data/"
+'''
+WIG20, MWIG40, SWIG80 = return_indexes()
+STOCKS = np.concatenate((WIG20, MWIG40, SWIG80), axis=None)
+STOCKS = ['VOXEL']
+TECH_EXCEPTIONS = ['BAHOLDING'] # 'BAHOLDING' has duplicated index
+EXCEPTIONS = TECH_EXCEPTIONS # + FUND_EXCEPTIONS
+EXCEPTIONS = []
+DATA_PATH = str(return_data_path())
 HISTORY = []
-YEARS = 1
+YEARS = 10
 SAMPLES = 240 * YEARS
 ALL_TRADES = pd.DataFrame()
-BE_VERBOSE = False
+BE_VERBOSE = True
 SHOW_GRAPH = False
 SAVE_SINGLE_STOCK = True
 SAVE_RESULTS = True
-ALGO = [kumo_brekaut_01_02]
-MULT_RISK = 2
-ATR_RATIO = 0.50 # 33 dla 10 lat
+ALGO = [kumo_brekaut_01_02]#[kumo_brekaut_01] #[algo_1_1]#
+MULT_RISK = 1
+ATR_RATIO = 0.5 #0.50 # 33 dla 10 lat
 warnings.filterwarnings('ignore')
 # Creating directory to store results
 create_directory('Results')
 
 for STOCK in STOCKS:
     if STOCK not in EXCEPTIONS:
-        #print(STOCK)
+        print(STOCK)
         temp = []
-        INITIAL_BUDGET = 1000
+        INITIAL_BUDGET = 1300
         BUDZET = Budget(amount=INITIAL_BUDGET)
         GeneralLedger = []
         TRANS_ID = 0

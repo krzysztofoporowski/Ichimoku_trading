@@ -5,7 +5,7 @@ Created on Wed Jul 10 19:48:17 2019
 @author: krzysztof.oporowski
 """
 
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, date
 import sys
 sys.path.append('/home/krzys/python/SimTradeSim')
 sys.path.append('/home/krzys/python/WSEDataReader')
@@ -37,13 +37,17 @@ def kumo_brekaut_01_02(row):
     # global BE_VERBOSE
     #if (get_date_only(row) > get_date_from_past(past=10) and
     #    (get_date_only(row) <= BOSSA_DATE)):
+    #print(row)
     if (get_date_only(row) == BOSSA_DATE) :
         BE_VERBOSE = True
     else:
         BE_VERBOSE = False
     if not TRANS.in_transaction:
-        if ((row['kumo'] == 1) and (row['close'] > row['senkou_span_a']) and
-                (row['close'] > row['c26']) and (row['kumo26'] == 1)):
+        #if ((row['close'] > row['senkou_span_a']) and
+        #if ((row['kumo'] == 1) and (row['close'] > row['senkou_span_a']) and
+        if ((row['close'] > row['senkou_span_b']) and (row['close'] > row['senkou_span_a']) and
+                (row['close'] > row['c26']) and (row['kumo26'] == 1) and
+                (row['tenkan_sen'] > row['kijun_sen'])):
             stock_number = TRANS.how_many_stocks(row['close'],
                                                  BUDZET.equity)
             temp_sl = row['senkou_span_b'] - row['atr_sl']
@@ -86,20 +90,22 @@ def kumo_brekaut_01_02(row):
             new_sl = TRANS.stop_loss
             if new_sl > curr_sl and BE_VERBOSE:
                 print('''
-                        ^^^ {} UP SL {}, {}, bought {}, curr result {}
+                        ^^^ {} UP SL {}, SL {:.2f}, bought {}, curr value: {:.2f}, curr result {:.2f}%
                       '''.format(get_date_only(row),
                                  STOCK,
                                  TRANS.stop_loss,
                                  TRANS.open_date,
-                                 TRANS.current_value - TRANS.open_total))
+                                 TRANS.current_value,
+                                 100*(TRANS.current_value - TRANS.open_total)/TRANS.open_total))
             elif new_sl <= curr_sl and BE_VERBOSE:
                 print('''
-                        --- {} DO nothing {}, {}, bought {}, curr result {}
+                        --- {} DO NOTHING {}, SL {:.2f}, bought {}, curr value: {:.2f} curr result {:.2f}%
                       '''.format(get_date_only(row),
                                  STOCK,
                                  TRANS.stop_loss,
                                  TRANS.open_date,
-                                 TRANS.current_value - TRANS.open_total))
+                                 TRANS.current_value,
+                                 100*(TRANS.current_value - TRANS.open_total)/TRANS.open_total))
             TRANS.register_transaction(verbose=False)
 
 
@@ -108,23 +114,15 @@ def kumo_brekaut_01_02(row):
 
 WIG20, MWIG40, SWIG80 = return_indexes()
 #STOCKS = WIG20 + MWIG40 + SWIG80
-STOCKS = np.concatenate((WIG20, MWIG40, SWIG80), axis=None)
-# STOCKS = ['WIELTON']
+ETFS = ['ETFBM40TR', 'ETFBNDXPL', 'ETFBS80TR', 'ETFBSPXPL', 'ETFBW20LV',
+        'ETFBW20ST', 'ETFBW20TR', 'ETFBWTECH', 'ETFDAX', 'ETFSP500']
+STOCKS = np.concatenate((WIG20, MWIG40, SWIG80, ETFS), axis=None)
+#STOCKS = ['WIELTON']
 TECH_EXCEPTIONS = ['BAHOLDING'] # 'BAHOLDING' has duplicated index
-FUND_EXCEPTIONS = ['ORANGEPL', # ORANGPL ROE 0,51% 23.08.2020
-                   'PLAY', # 31.08.2020 ROE 0%, c/wk 22.25, dlug 96,12%
-                   'BENEFIT', # 31.08.2020 roe 2.06%, c/z 188.93, dlug 71.4%
-                   'ABPL', # 31.08.2020 dlug 66.16%
-                   'ASTARTA', # 31.08.2020 roe - 5.08%
-                   'BOS', # 31.08.2020 roe 3.11%
-                   'COGNOR', # 31.08.2020 roe 5,67% dlug 69,83%
-                   'CORMAY', # 31.08.2020 roe - 41.85%
-                   'DATAWALK', # 31.08.2020 roe -77,11%
-                   'MENNICA', # 31.08.2020 roe 2,46%
-                   'NETIA' # 31.08.2020 roe 2,70%
+FUND_EXCEPTIONS = [
                    ] 
-EXCEPTIONS = TECH_EXCEPTIONS + FUND_EXCEPTIONS
-#EXCEPTIONS = []
+EXCEPTIONS = TECH_EXCEPTIONS # + FUND_EXCEPTIONS
+EXCEPTIONS = []
 DATA_PATH = str(return_data_path())
 HISTORY = []
 YEARS = 3
@@ -136,15 +134,19 @@ SAVE_RESULTS = False
 ALGO = [kumo_brekaut_01_02]
 MULT_RISK = 2
 ATR_RATIO = 0.50 # 33 dla 10 lat
-BOSSA_DATE = get_bossa_date(mode='datetime')
+#WIG20 = get_data_from_bossa(stooq_name='WIG20', path_to_data=DATA_PATH)
+#print(pd.to_datetime(WIG20.tail(1).index))
+BOSSA_DATE = get_bossa_date(mode='datetime') # date.today()
+print(BOSSA_DATE)
 warnings.filterwarnings('ignore')
 # Creating directory to store results
 create_directory('Signals')
-
+#print('start processing')
 for STOCK in STOCKS:
     if STOCK not in EXCEPTIONS:
+        #print('processing ', STOCK)
         temp = []
-        INITIAL_BUDGET = 1000
+        INITIAL_BUDGET = 1500
         BUDZET = Budget(amount=INITIAL_BUDGET)
         GeneralLedger = []
         TRANS_ID = 0
@@ -186,7 +188,7 @@ for STOCK in STOCKS:
         data = DATA.tail(SAMPLES)
         data['signal'] = data.apply(ALGO[0], axis=1)
         man_close_date = get_prev_workday_datestring()
-
+#print('stop processing')
 if SAVE_RESULTS:
     try:
         F_N = 'Results/' + str(ALGO[0]).split(' ')[1] + '-'

@@ -123,3 +123,21 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Result files 
+Results/
+daniel_wyniki_2023-09-03/
+
+# Pliki tekstowe z danymi i wynikami
+*.txt
+!requirements.txt
+
+# Cache i wyniki eksperymentów
+cache.json
+__pycache__/
+*.py[cod]
+wyniki/
+
+# Środowiska wirtualne
+.venv/
+venv/
